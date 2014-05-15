@@ -3,6 +3,7 @@ package amazonmws
 
 import (
 	"fmt"
+	"strconv"
 )
 
 /*
@@ -142,7 +143,7 @@ func (api AmazonMWSAPI) ListInventorySupply(SKUs []string) ([]byte, error) {
 	// /Reports/2009-01-01
 
 	for index, sku := range SKUs {
-		params["SellerSkus.member."+string((index+1))] = string(sku)
+		params["SellerSkus.member."+strconv.Itoa(index+1)] = string(sku)
 	}
 
 	return api.genSignAndFetch("ListInventorySupply", "/FulfillmentInventory/2010-10-01", params)
