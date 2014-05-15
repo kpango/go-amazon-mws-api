@@ -21,7 +21,7 @@ type AmazonMWSAPI struct {
 	SellerId      string
 }
 
-func (api AmazonMWSAPI) genSignAndFetch(Action string, ActionPath string, Parameters map[string]string) (string, error) {
+func (api AmazonMWSAPI) genSignAndFetch2(Action string, ActionPath string, Parameters map[string]string) (string, error) {
 	genUrl, err := GenerateAmazonUrl(api, Action, ActionPath, Parameters)
 	if err != nil {
 		return "", err
@@ -48,6 +48,34 @@ func (api AmazonMWSAPI) genSignAndFetch(Action string, ActionPath string, Parame
 	return string(body), nil
 }
 
+func (api AmazonMWSAPI) genSignAndFetch(Action string, ActionPath string, Parameters map[string]string) ([]byte, error) {
+	genUrl, err := GenerateAmazonUrl(api, Action, ActionPath, Parameters)
+	if err != nil {
+		return nil, err
+	}
+
+	SetTimestamp(genUrl)
+
+	signedurl, err := SignAmazonUrl(genUrl, api)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := http.Get(signedurl)
+	if err != nil {
+		return nil, err
+	}
+
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	return body, nil
+}
+
+//api.genSignAndFetch("ListOrders", "/Orders/2011-01-01", params)
 func GenerateAmazonUrl(api AmazonMWSAPI, Action string, ActionPath string, Parameters map[string]string) (finalUrl *url.URL, err error) {
 	result, err := url.Parse(api.Host)
 	if err != nil {
@@ -58,13 +86,28 @@ func GenerateAmazonUrl(api AmazonMWSAPI, Action string, ActionPath string, Param
 	result.Scheme = "https"
 	result.Path = ActionPath
 
+	// Generate version from ActionPath
+
+	actionString := strings.Split(ActionPath, "/")
+
 	values := url.Values{}
 	values.Add("Action", Action)
 	values.Add("AWSAccessKeyId", api.AccessKey)
-	values.Add("SellerId", api.SellerId)
+	// The Report API uses Merchant instead of Seller. So we need to adjust for that.
+	if len(ActionPath) > 1 {
+		values.Add("SellerId", api.SellerId)
+	} else {
+		values.Add("Merchant", api.SellerId)
+	}
 	values.Add("SignatureVersion", "2")
 	values.Add("SignatureMethod", "HmacSHA256")
-	values.Add("Version", "2011-10-01")
+	//values.Add("Version", "2013-09-01")
+	// The Report API doesn't have an ActionPath, so we need to simply append the version number
+	if len(ActionPath) > 1 {
+		values.Add("Version", string(actionString[len(actionString)-1]))
+	} else {
+		values.Add("Version", "2009-01-01")
+	}
 
 	for k, v := range Parameters {
 		values.Set(k, v)
@@ -100,7 +143,7 @@ func SignAmazonUrl(origUrl *url.URL, api AmazonMWSAPI) (signedUrl string, err er
 	hasher := hmac.New(sha256.New, []byte(api.SecretKey))
 	_, err = hasher.Write([]byte(toSign))
 	if err != nil {
-		return "", err
+		return "", nil
 	}
 
 	hash := base64.StdEncoding.EncodeToString(hasher.Sum(nil))

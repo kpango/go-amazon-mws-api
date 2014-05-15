@@ -18,7 +18,7 @@ func (api AmazonMWSAPI) GetLowestOfferListingsForASIN(items []string) (string, e
 
 	params["MarketplaceId"] = string(api.MarketplaceId)
 
-	return api.genSignAndFetch("GetLowestOfferListingsForASIN", "/Products/2011-10-01", params)
+	return api.genSignAndFetch2("GetLowestOfferListingsForASIN", "/Products/2011-10-01", params)
 }
 
 /*
@@ -34,7 +34,7 @@ func (api AmazonMWSAPI) GetCompetitivePricingForASIN(items []string) (string, er
 
 	params["MarketplaceId"] = string(api.MarketplaceId)
 
-	return api.genSignAndFetch("GetCompetitivePricingForASIN", "/Products/2011-10-01", params)
+	return api.genSignAndFetch2("GetCompetitivePricingForASIN", "/Products/2011-10-01", params)
 }
 
 func (api AmazonMWSAPI) GetMatchingProductForId(idType string, idList []string) (string, error) {
@@ -48,5 +48,102 @@ func (api AmazonMWSAPI) GetMatchingProductForId(idType string, idList []string) 
 	params["IdType"] = idType
 	params["MarketplaceId"] = string(api.MarketplaceId)
 
-	return api.genSignAndFetch("GetMatchingProductForId", "/Products/2011-10-01", params)
+	return api.genSignAndFetch2("GetMatchingProductForId", "/Products/2011-10-01", params)
+}
+
+/*
+List orders
+Takes a map of parameters, instead of specifying exactly what do to
+e.g. ["CreatedAfter"], ["UpdatedBefore"]
+*/
+func (api AmazonMWSAPI) ListOrders(inputParameters map[string]string) ([]byte, error) {
+	params := make(map[string]string)
+
+	for k, v := range inputParameters {
+		params[k] = v
+	}
+
+	params["MarketplaceId.Id.1"] = string(api.MarketplaceId)
+	//params["CreatedAfter"] = string(createdAfter)
+	//params["CreatedBefore"] = string(createdBefore)
+
+	return api.genSignAndFetch("ListOrders", "/Orders/2013-09-01", params)
+}
+
+func (api AmazonMWSAPI) ListOrdersByNextToken(token string) ([]byte, error) {
+	params := make(map[string]string)
+
+	//params["MarketplaceId.Id.1"] = string(api.MarketplaceId)
+	//params["CreatedAfter"] = string(createdAfter)
+	params["NextToken"] = string(token)
+
+	return api.genSignAndFetch("ListOrdersByNextToken", "/Orders/2013-09-01", params)
+}
+
+func (api AmazonMWSAPI) GetOrder(orderId string) ([]byte, error) {
+	params := make(map[string]string)
+
+	//params["MarketplaceId.Id.1"] = string(api.MarketplaceId)
+	//params["CreatedAfter"] = string(createdAfter)
+	params["AmazonOrderId.Id.1"] = string(orderId)
+
+	return api.genSignAndFetch("GetOrder", "/Orders/2013-09-01", params)
+}
+
+func (api AmazonMWSAPI) ListOrderItems(orderId string) ([]byte, error) {
+	params := make(map[string]string)
+
+	//params["MarketplaceId.Id.1"] = string(api.MarketplaceId)
+	//params["CreatedAfter"] = string(createdAfter)
+	params["AmazonOrderId"] = string(orderId)
+
+	return api.genSignAndFetch("ListOrderItems", "/Orders/2013-09-01", params)
+}
+
+func (api AmazonMWSAPI) GetReportList(reportType string) ([]byte, error) {
+	params := make(map[string]string)
+
+	//params["MarketplaceId.Id.1"] = string(api.MarketplaceId)
+	//params["CreatedAfter"] = string(createdAfter)
+	params["ReportTypeList.Type.1"] = string(reportType)
+	// /Reports/2009-01-01
+
+	return api.genSignAndFetch("GetReportList", "/", params)
+}
+
+func (api AmazonMWSAPI) GetReportListByNextToken(token string) ([]byte, error) {
+	params := make(map[string]string)
+
+	//params["MarketplaceId.Id.1"] = string(api.MarketplaceId)
+	//params["CreatedAfter"] = string(createdAfter)
+	params["NextToken"] = string(token)
+	// /Reports/2009-01-01
+
+	return api.genSignAndFetch("GetReportListByNextToken", "/", params)
+}
+
+func (api AmazonMWSAPI) GetReport(reportID string) ([]byte, error) {
+	params := make(map[string]string)
+
+	//params["MarketplaceId.Id.1"] = string(api.MarketplaceId)
+	//params["CreatedAfter"] = string(createdAfter)
+	params["ReportId"] = string(reportID)
+	// /Reports/2009-01-01
+
+	return api.genSignAndFetch("GetReport", "/", params)
+}
+
+func (api AmazonMWSAPI) ListInventorySupply(SKUs []string) ([]byte, error) {
+	params := make(map[string]string)
+
+	//params["MarketplaceId.Id.1"] = string(api.MarketplaceId)
+	//params["CreatedAfter"] = string(createdAfter)
+	//params["ReportId"] = string(reportID)
+	// /Reports/2009-01-01
+
+	for index, sku := range SKUs {
+		params["SellerSkus.member."+string((index+1))] = string(sku)
+	}
+
+	return api.genSignAndFetch("ListInventorySupply", "/FulfillmentInventory/2010-10-01", params)
 }
