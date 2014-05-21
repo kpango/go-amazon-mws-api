@@ -134,17 +134,36 @@ func (api AmazonMWSAPI) GetReport(reportID string) ([]byte, error) {
 	return api.genSignAndFetch("GetReport", "/", params)
 }
 
-func (api AmazonMWSAPI) ListInventorySupply(SKUs []string) ([]byte, error) {
+/*
+ListInventorySupply
+Takes an string array of SKUs
+Returns a byte array in response
+*/
+func (api AmazonMWSAPI) ListInventorySupply(SKUs []string, ResponseGroup string) ([]byte, error) {
 	params := make(map[string]string)
 
 	//params["MarketplaceId.Id.1"] = string(api.MarketplaceId)
 	//params["CreatedAfter"] = string(createdAfter)
 	//params["ReportId"] = string(reportID)
 	// /Reports/2009-01-01
+	params["ResponseGroup"] = ResponseGroup
 
 	for index, sku := range SKUs {
 		params["SellerSkus.member."+strconv.Itoa(index+1)] = string(sku)
 	}
 
 	return api.genSignAndFetch("ListInventorySupply", "/FulfillmentInventory/2010-10-01", params)
+}
+
+/*
+ListInventorySupplyByNextToken
+Takes a string token for next page of supply listings
+Returns a byte array in response
+*/
+func (api AmazonMWSAPI) ListInventorySupplyByNextToken(token string) ([]byte, error) {
+	params := make(map[string]string)
+
+	params["NextToken"] = token
+
+	return api.genSignAndFetch("ListInventorySupplyByNextToken", "/FulfillmentInventory/2010-10-01", params)
 }

@@ -22,6 +22,9 @@ The primary changes are better error handling, expanded API support, selectable 
 + Products (not fully updated to new URL call, still returns string)
   + GetCompetitivePricingForASIN
   + GetMatchingProductForId
++ Fulfillment
+  + ListInventorySupply
+  + ListInventorySupplyByNextToken
 
 ## TODO
 - [ ] Move APIs to Map based parameters
