@@ -3,7 +3,6 @@ package amazonmws
 
 import (
 	"fmt"
-	"strconv"
 )
 
 /*
@@ -142,14 +141,12 @@ Returns a byte array in response
 func (api AmazonMWSAPI) ListInventorySupply(SKUs []string, ResponseGroup string) ([]byte, error) {
 	params := make(map[string]string)
 
-	//params["MarketplaceId.Id.1"] = string(api.MarketplaceId)
-	//params["CreatedAfter"] = string(createdAfter)
-	//params["ReportId"] = string(reportID)
-	// /Reports/2009-01-01
 	params["ResponseGroup"] = ResponseGroup
 
 	for index, sku := range SKUs {
-		params["SellerSkus.member."+strconv.Itoa(index+1)] = string(sku)
+		// We need to pad the integers to make sure they sort correctly in the params list
+		paramString := fmt.Sprintf("SellerSkus.member.%02.f", float32(index+1))
+		params[paramString] = string(sku)
 	}
 
 	return api.genSignAndFetch("ListInventorySupply", "/FulfillmentInventory/2010-10-01", params)
